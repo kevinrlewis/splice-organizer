@@ -18,6 +18,10 @@ class Organizer:
             'snares': ['snare'],
             'percs': ['rim'],
             'pads': ['pad'],
+            'plucks': ['pluck'],
+            'keys': ['key', 'piano'],
+            'bells': ['bell'],
+            'guitar': ['guitar'],
             'fx': ['fx'],
             'vocals': ['vocal'],
             'loops': ['loop'],
@@ -31,33 +35,46 @@ class Organizer:
         print(self.processed_directory)
 
     def organize(self):
-        print("organizing... %s to %s" % (self.splice_directory, self.destination))
+        # print("organizing... %s to %s" % (self.splice_directory, self.destination))
         for subdir, dirs, files in os.walk(self.splice_directory):
             for file in files:
-                sample = os.path.join(subdir, file)
-                for k, v in self.top_levels.items():
-                    copy_decided = False
-                    for option in v:
-                        if option in sample:
-                            end_destination = os.path.join(self.destination, k)
-                            if not os.path.exists(end_destination):
-                                os.makedirs(end_destination)
+                copy_decided = False
+                if not file.endswith('.asd') or not file.endswith('.txt'):
+                    sample = os.path.join(subdir, file)
 
-                            dest = os.path.join(end_destination, file)
-                            # print("Copying: %s\nTo: %s" % (sample, dest))
-                            try:
-                                shutil.copyfile(sample, dest)
-                            except:
-                                print("Copy Error: %s" % sample)
-                                print("Unexpected error:", sys.exc_info()[0])
-                                raise
+                    for k, v in self.top_levels.items():
+                        for option in v:
+                            # print(option, sample)
+                            if option.lower() in file.lower() or option.lower() in sample.lower():
+                                copy_decided = True
+                                # print('directory chosen: %s' % k)
+                                end_destination = os.path.join(self.destination, k)
+                                if not os.path.exists(end_destination):
+                                    os.makedirs(end_destination)
 
-                            if self.move:
-                                shutil.move(sample, self.processed_directory)
-                            copy_decided = True
+                                dest = os.path.join(end_destination, file)
+                                # print("Copying: %s\nTo: %s" % (sample, dest))
+                                try:
+                                    shutil.copyfile(sample, dest)
+                                except:
+                                    print("Copy Error: %s" % sample)
+                                    print("Unexpected error:", sys.exc_info()[0])
+                                    copy_decided = True
+
+                                if self.move:
+                                    shutil.move(sample, self.processed_directory)
+                                break
+                        if copy_decided:
                             break
-                    if copy_decided:
-                        break
+                    if not copy_decided:
+                        # print(k, v, sample)
+                        # when file placement can't be determined
+                        end_destination = os.path.join(self.destination, 'misc')
+                        if not os.path.exists(end_destination):
+                            os.makedirs(end_destination)
+
+                        dest = os.path.join(end_destination, file)
+                        shutil.copyfile(sample, dest)
         return True
 
 
