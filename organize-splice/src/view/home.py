@@ -15,30 +15,32 @@ class Home():
             "destination_location": None
         }
 
-    def display(self):
-        window = tk.Tk()
-        window.title('Splice Organizer')
+        self.window = tk.Tk()
+        self.window.title('Splice Organizer')
 
         s = ttk.Style().theme_use('alt')
 
-        main_frm = ttk.Frame(window)
-        main_frm.grid(row=0, padx=5, pady=5)
+        self.main_frm = ttk.Frame(self.window)
+        self.main_frm.grid(row=0, padx=5, pady=5)
 
-        self.splice_location_label = ttk.Label(main_frm, text='Splice Location').grid(row=0)
-        self.destination_location_label = ttk.Label(main_frm, text='Destination Location').grid(row=1)
+    def display(self):
+        self.splice_location_label = ttk.Label(self.main_frm, text='Splice Location')
+        self.splice_location_label.grid(row=0)
+        self.destination_location_label = ttk.Label(self.main_frm, text='Destination Location')
+        self.destination_location_label.grid(row=1)
 
         splice_location_button = ttk.Button(
-            main_frm,
+            self.main_frm,
             text='...',
             width=25,
-            command=self.browse_files(self.splice_location_label, "splice_location")
+            command=lambda: self.browse_files(self.splice_location_label, "splice_location")
         )
 
         destination_location_button = ttk.Button(
-            main_frm,
+            self.main_frm,
             text='...',
             width=25,
-            command=self.browse_files(self.destination_location_label, "destination_location")
+            command=lambda: self.browse_files(self.destination_location_label, "destination_location")
         )
 
         splice_location_button.grid(row=0, column=1)
@@ -46,32 +48,40 @@ class Home():
 
         move = tk.BooleanVar()
         ttk.Checkbutton(
-            main_frm,
+            self.main_frm,
             text='Move files to processed folder within Splice folder.',
             variable=move
         ).grid(row=2, sticky=tk.W)
 
         button = ttk.Button(
-            main_frm,
+            self.main_frm,
             text='ORGANIZE',
             width=25,
-            command=self.organize_click(self.vars.get("splice_location"), self.vars.get("destination_location"), move.get())
+            command=lambda: self.organize_click(
+                self.vars.get("splice_location"),
+                self.vars.get("destination_location"),
+                move.get()
+            )
         )
 
-        button.grid(row=3)
-        window.mainloop()
+        button.grid(row=3, column=0)
+        self.window.mainloop()
 
     def organize_click(self, splice_folder, destination, move):
         if not splice_folder or not destination:
             self.organized = False
 
         o = organize.Organizer(splice_folder, destination, move)
-        self.organized = o
+        self.organized = o.organize()
+
+        print("organized: %s" % self.organized)
+        if self.organized:
+            self.status = ttk.Label(self.main_frm, text='Organized Successfully', foreground='#00b300')
+            self.status.grid(row=3, column=1)
 
     def browse_files(self, label, var):
-        filename = fd.askopenfilename(
-            initialdir="/",
-            title="Select a File"
+        filename = fd.askdirectory(
+            title="Select a Directory"
         )
 
         # Change label contents
@@ -79,6 +89,7 @@ class Home():
         upd = {
             var: filename
         }
+        print(upd)
         self.vars.update(upd)
         print(self.vars)
 
